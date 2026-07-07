@@ -189,6 +189,11 @@ export function convertFixture(fx: ApiFixture): Match {
     match.as = fx.goals.away ?? 0;
   }
 
+  // 経過時間 (live 試合用)
+  if (fx.fixture.status.elapsed != null) {
+    match.elapsed = fx.fixture.status.elapsed;
+  }
+
   // PK戦
   if (
     (fx.fixture.status.short === "PEN" || fx.fixture.status.short === "AET") &&

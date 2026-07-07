@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { fetchMatches } from "@/lib/api-football";
+import { fetchMatches, fetchFixtureDetail } from "@/lib/api-football";
 import {
   broadcastGoalNotification,
   broadcastMatchStart,
@@ -24,6 +24,27 @@ function hasLiveWindow(): boolean {
     const ko = new Date(m.ko).getTime();
     return now >= ko - MARGIN && now <= ko + MATCH_MS + MARGIN;
   });
+}
+
+/**
+ * コールドスタート時にライブ試合の直近ゴールを検出する。
+ * 試合のイベントデータから、現在の経過時間の直近2分以内に
+ * 起きたゴールがあれば通知対象とする。
+ */
+async function detectRecentGoals(match: Match): Promise<boolean> {
+  try {
+    const detail = await fetchFixtureDetail(match.id);
+    const elapsed = detail.elapsed;
+    if (elapsed == null || !detail.events) return false;
+
+    // 直近2分以内のゴールがあるか
+    return detail.events.some(
+      (e) => e.type === "goal" && e.minute >= elapsed - 2,
+    );
+  } catch (e) {
+    console.error(`[cron] Failed to fetch detail for cold-start recovery (${match.id}):`, e);
+    return false;
+  }
 }
 
 export async function GET(req: NextRequest) {
@@ -74,14 +95,31 @@ export async function GET(req: NextRequest) {
           ended.push(match);
         }
       } else {
-        // 初回登場 (コールドスタート時含む):
-        // KO から5分以内の live 試合のみ開始通知する。
-        // これにより、コールドスタートで古い live 試合に再通知するのを防ぐ。
+        // 初回登場 (コールドスタート時含む)
         if (match.status === "live") {
           const koTime = new Date(match.ko).getTime();
-          const elapsed = Date.now() - koTime;
-          if (elapsed < 5 * 60 * 1000) {
+          const sinceKO = Date.now() - koTime;
+
+          if (sinceKO < 5 * 60 * 1000) {
+            // KO から5分以内 → 開始通知
             started.push(match);
+          } else {
+            // コールドスタート復帰: イベントデータから直近ゴールを検出
+            const hasRecent = await detectRecentGoals(match);
+            if (hasRecent) {
+              scoreChanges.push(match);
+            }
+          }
+        }
+        // final で prev がない場合 (コールドスタート後に終了していた試合):
+        // 試合終了からの経過で判断
+        if (match.status === "final") {
+          const koTime = new Date(match.ko).getTime();
+          const estimatedEnd = koTime + MATCH_MS;
+          const sinceEnd = Date.now() - estimatedEnd;
+          // 試合終了から5分以内なら通知
+          if (sinceEnd >= 0 && sinceEnd < 5 * 60 * 1000) {
+            ended.push(match);
           }
         }
       }
@@ -110,7 +148,7 @@ export async function GET(req: NextRequest) {
       try {
         await broadcastMatchStart(match);
         notifications.push(
-          `🏟️ ${match.home?.n ?? "?"} vs ${match.away?.n ?? "?"}`,
+          `START ${match.home?.n ?? "?"} vs ${match.away?.n ?? "?"}`,
         );
       } catch (e) {
         console.error(`[cron] LINE start notification failed for ${match.id}:`, e);
@@ -122,7 +160,7 @@ export async function GET(req: NextRequest) {
       try {
         await broadcastGoalNotification(match);
         notifications.push(
-          `⚽ ${match.home?.n ?? "?"} ${match.hs} - ${match.as} ${match.away?.n ?? "?"}`,
+          `GOAL ${match.home?.n ?? "?"} ${match.hs} - ${match.as} ${match.away?.n ?? "?"}`,
         );
       } catch (e) {
         console.error(`[cron] LINE notification failed for ${match.id}:`, e);
@@ -134,7 +172,7 @@ export async function GET(req: NextRequest) {
       try {
         await broadcastMatchEnd(match);
         notifications.push(
-          `🏁 ${match.home?.n ?? "?"} ${match.hs} - ${match.as} ${match.away?.n ?? "?"}`,
+          `END ${match.home?.n ?? "?"} ${match.hs} - ${match.as} ${match.away?.n ?? "?"}`,
         );
       } catch (e) {
         console.error(`[cron] LINE end notification failed for ${match.id}:`, e);

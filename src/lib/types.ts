@@ -39,6 +39,7 @@ export interface Match {
   upset?: boolean;
   group?: string;
   prob?: Prob;
+  elapsed?: number;        // 現在の試合経過分 (live時のみ)
   events?: MatchEvent[];
 }
 
