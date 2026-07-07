@@ -1,10 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchMatches } from "@/lib/api-football";
 import { broadcastGoalNotification } from "@/lib/line-notify";
+import { DATA } from "@/lib/data";
 import { Match } from "@/lib/types";
+import { MATCH_MS } from "@/lib/constants";
 
 /** 前回取得時のスコアを保持するキャッシュ (fixtureId → { hs, as }) */
 const prevScores = new Map<string, { hs: number; as: number }>();
+
+/** 現在ライブ中 or まもなく開始の試合があるか (前後30分のマージン付き) */
+function hasLiveWindow(): boolean {
+  const now = Date.now();
+  const MARGIN = 30 * 60 * 1000; // 30分
+  return DATA.matches.some((m) => {
+    if (m.status === "final") return false;
+    const ko = new Date(m.ko).getTime();
+    return now >= ko - MARGIN && now <= ko + MATCH_MS + MARGIN;
+  });
+}
 
 export async function GET(req: NextRequest) {
   // CRON_SECRET による認証 (Vercel Cron は Authorization ヘッダーを送る)
@@ -17,6 +30,11 @@ export async function GET(req: NextRequest) {
   // API_FOOTBALL_KEY が未設定なら何もしない
   if (!process.env.API_FOOTBALL_KEY) {
     return NextResponse.json({ message: "API_FOOTBALL_KEY not configured, skipped" });
+  }
+
+  // ライブ試合がなければ API を叩かずスキップ
+  if (!hasLiveWindow()) {
+    return NextResponse.json({ message: "No live matches, skipped" });
   }
 
   try {
