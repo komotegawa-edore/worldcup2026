@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useMatchData } from "@/hooks/useMatchData";
 import Header from "@/components/Header";
 import Hero from "@/components/Hero";
@@ -12,9 +12,31 @@ import ScheduleList from "@/components/ScheduleList";
 import RankingPanel from "@/components/RankingPanel";
 import Footer from "@/components/Footer";
 
+const VALID_TABS = ["bracket", "group", "results", "schedule", "ranking"];
+
+function getInitialTab(): string {
+  if (typeof window === "undefined") return "bracket";
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get("tab");
+  return tab && VALID_TABS.includes(tab) ? tab : "bracket";
+}
+
 export default function Home() {
   const { data, isLoading } = useMatchData();
-  const [activeTab, setActiveTab] = useState("bracket");
+  const [activeTab, setActiveTab] = useState(getInitialTab);
+
+  const handleTabChange = useCallback((tab: string) => {
+    setActiveTab(tab);
+    const url = tab === "bracket" ? "/" : `/?tab=${tab}`;
+    window.history.replaceState(null, "", url);
+  }, []);
+
+  // popstate でブラウザ戻る/進むに対応
+  useEffect(() => {
+    const onPop = () => setActiveTab(getInitialTab());
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
   if (isLoading || !data) {
     return (
@@ -30,7 +52,7 @@ export default function Home() {
       <Header matches={data.matches} />
       <main>
         <Hero matches={data.matches} />
-        <TabNav active={activeTab} onTabChange={setActiveTab} />
+        <TabNav active={activeTab} onTabChange={handleTabChange} />
         <section className={`panel${activeTab === "bracket" ? " active" : ""}`}>
           <Bracket matches={data.matches} />
         </section>

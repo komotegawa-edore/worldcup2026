@@ -501,7 +501,7 @@ footer {
   text-align: center;
   min-width: 40px;
 }
-.tl-event { white-space: nowrap }
+.tl-event { word-break: break-word }
 .tl-assist { font-size: 11px; color: var(--chalk-dim) }
 .tl-detail { font-size: 11px; color: var(--live) }
 
