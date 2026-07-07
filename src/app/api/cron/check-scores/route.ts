@@ -100,8 +100,8 @@ export async function GET(req: NextRequest) {
           const koTime = new Date(match.ko).getTime();
           const sinceKO = Date.now() - koTime;
 
-          if (sinceKO < 5 * 60 * 1000) {
-            // KO から5分以内 → 開始通知
+          if (sinceKO < 90 * 1000) {
+            // KO から90秒以内 → 開始通知 (cron間隔60秒+バッファ)
             started.push(match);
           } else {
             // コールドスタート復帰: イベントデータから直近ゴールを検出
@@ -111,17 +111,9 @@ export async function GET(req: NextRequest) {
             }
           }
         }
-        // final で prev がない場合 (コールドスタート後に終了していた試合):
-        // 試合終了からの経過で判断
-        if (match.status === "final") {
-          const koTime = new Date(match.ko).getTime();
-          const estimatedEnd = koTime + MATCH_MS;
-          const sinceEnd = Date.now() - estimatedEnd;
-          // 試合終了から5分以内なら通知
-          if (sinceEnd >= 0 && sinceEnd < 5 * 60 * 1000) {
-            ended.push(match);
-          }
-        }
+        // final で prev がない場合 (コールドスタート):
+        // 推定終了時刻が不正確なため、コールドスタート時は終了通知をスキップ。
+        // prev がある (ウォーム) 時のみ live→final 遷移を正しく検知する。
       }
 
       // キャッシュ更新
