@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Match, MatchEvent } from "@/lib/types";
+import Link from "next/link";
+import { Match } from "@/lib/types";
 import { ROUND_JA } from "@/lib/constants";
 import { fmtDT, isLive, winnerSide } from "@/lib/utils";
 
@@ -40,33 +40,6 @@ function TeamRow({ match, side }: { match: Match; side: "home" | "away" }) {
   );
 }
 
-function EventList({ events, match }: { events: MatchEvent[]; match: Match }) {
-  if (events.length === 0) {
-    return <div className="events-empty">得点なし</div>;
-  }
-  return (
-    <div className="events-list">
-      {events.map((ev, i) => {
-        const teamName =
-          ev.side === "home" ? match.home?.n : match.away?.n;
-        return (
-          <div key={i} className="event-row">
-            <span className="event-icon">⚽</span>
-            <span className="event-min num">{ev.minute}&apos;</span>
-            <span className="event-player">
-              {ev.player}
-              {teamName && <span className="event-team">({teamName})</span>}
-            </span>
-            {ev.detail && (
-              <span className="event-detail">{ev.detail}</span>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
 interface MatchCardProps {
   match: Match;
   extraClass?: string;
@@ -74,38 +47,10 @@ interface MatchCardProps {
 
 export default function MatchCard({ match, extraClass = "" }: MatchCardProps) {
   const live = isLive(match);
-  const canExpand = match.status === "final" || live;
-  const [open, setOpen] = useState(false);
-  const [events, setEvents] = useState<MatchEvent[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const canLink = match.status === "final" || live || (match.status === "scheduled" && match.home && match.away);
 
-  const handleClick = async () => {
-    if (!canExpand) return;
-    if (open) {
-      setOpen(false);
-      return;
-    }
-    setOpen(true);
-    if (events !== null) return;
-    setLoading(true);
-    try {
-      const res = await fetch(`/api/matches/${match.id}`);
-      if (res.ok) {
-        const data: Match = await res.json();
-        setEvents(data.events ?? []);
-      }
-    } catch {
-      // silently fail
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  return (
-    <div
-      className={`mcard ${extraClass} ${canExpand ? "expandable" : ""}`}
-      onClick={handleClick}
-    >
+  const card = (
+    <div className={`mcard ${extraClass} ${canLink ? "expandable" : ""}`}>
       <div className="meta">
         <span>{ROUND_JA[match.round]}</span>
         {live ? (
@@ -119,15 +64,16 @@ export default function MatchCard({ match, extraClass = "" }: MatchCardProps) {
       <TeamRow match={match} side="home" />
       <TeamRow match={match} side="away" />
       {match.note && <div className="note-pk">{match.note}</div>}
-      {open && (
-        <div className="events-panel">
-          {loading ? (
-            <div className="events-loading">読み込み中…</div>
-          ) : events ? (
-            <EventList events={events} match={match} />
-          ) : null}
-        </div>
-      )}
     </div>
   );
+
+  if (canLink) {
+    return (
+      <Link href={`/matches/${match.id}`} style={{ textDecoration: "none", color: "inherit" }}>
+        {card}
+      </Link>
+    );
+  }
+
+  return card;
 }

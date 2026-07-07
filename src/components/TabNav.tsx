@@ -10,6 +10,7 @@ const TABS = [
   { id: "group", label: "グループ" },
   { id: "results", label: "試合結果" },
   { id: "schedule", label: "今後の日程" },
+  { id: "ranking", label: "ランキング" },
 ];
 
 export default function TabNav({ active, onTabChange }: TabNavProps) {

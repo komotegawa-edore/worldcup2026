@@ -15,7 +15,7 @@ export interface Prob {
 
 export interface MatchEvent {
   minute: number;
-  type: "goal" | "card" | "subst";
+  type: "goal" | "card" | "red" | "subst";
   player: string;
   assist?: string;
   detail?: string;
@@ -37,6 +37,7 @@ export interface Match {
   pkWinner?: "home" | "away";
   note?: string;
   upset?: boolean;
+  group?: string;
   prob?: Prob;
   events?: MatchEvent[];
 }
@@ -44,4 +45,38 @@ export interface Match {
 export interface MatchData {
   updated: string;
   matches: Match[];
+}
+
+export interface PlayerRank {
+  rank: number;
+  name: string;
+  team: string;
+  flag: string;
+  count: number;
+}
+
+export interface GroupStanding {
+  rank: number;
+  team: Team;
+  played: number;
+  won: number;
+  drawn: number;
+  lost: number;
+  gf: number;
+  ga: number;
+  gd: number;
+  points: number;
+}
+
+export interface SquadPlayer {
+  name: string;
+  age: number | null;
+  number: number | null;
+  position: string;
+  photo: string;
+}
+
+export interface MatchPreview {
+  home: SquadPlayer[];
+  away: SquadPlayer[];
 }

@@ -9,6 +9,7 @@ import Bracket from "@/components/Bracket";
 import GroupStage from "@/components/GroupStage";
 import ResultsList from "@/components/ResultsList";
 import ScheduleList from "@/components/ScheduleList";
+import RankingPanel from "@/components/RankingPanel";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -41,6 +42,9 @@ export default function Home() {
         </section>
         <section className={`panel${activeTab === "schedule" ? " active" : ""}`}>
           <ScheduleList matches={data.matches} />
+        </section>
+        <section className={`panel${activeTab === "ranking" ? " active" : ""}`}>
+          <RankingPanel />
         </section>
       </main>
       <Footer />
