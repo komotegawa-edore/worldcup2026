@@ -587,7 +587,13 @@ footer {
   border-collapse: collapse;
   font-size: 12px;
   margin-bottom: 8px;
+  table-layout: fixed;
 }
+/* 列幅: # チーム 勝 分 負 得 失 差 勝点 */
+.standings-table col:nth-child(1) { width: 28px }
+.standings-table col:nth-child(2) { width: auto }
+.standings-table col:nth-child(n+3) { width: 32px }
+.standings-table col:last-child { width: 36px }
 .standings-table th {
   font-family: var(--font-d);
   font-size: 10px;
@@ -595,16 +601,18 @@ footer {
   text-transform: uppercase;
   color: var(--chalk-dim);
   text-align: center;
-  padding: 6px 4px;
+  padding: 6px 2px;
   border-bottom: 1px solid var(--line);
+  white-space: nowrap;
 }
 .standings-table th:nth-child(2) { text-align: left }
 .standings-table td {
-  padding: 8px 4px;
+  padding: 8px 2px;
   text-align: center;
   border-bottom: 1px solid rgba(237,243,236,.06);
+  white-space: nowrap;
 }
-.standings-table td:nth-child(2) { text-align: left }
+.standings-table td:nth-child(2) { text-align: left; overflow: hidden; text-overflow: ellipsis }
 .standings-pts {
   font-weight: 700;
   color: var(--grass);

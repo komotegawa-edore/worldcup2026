@@ -9,6 +9,13 @@ const fetcher = (url: string) => fetch(url).then((r) => r.json());
 function StandingsTable({ rows }: { rows: GroupStanding[] }) {
   return (
     <table className="standings-table">
+      <colgroup>
+        <col />{/* # */}
+        <col />{/* チーム */}
+        <col /><col /><col />{/* 勝 分 負 */}
+        <col /><col /><col />{/* 得 失 差 */}
+        <col />{/* 勝点 */}
+      </colgroup>
       <thead>
         <tr>
           <th>#</th>
