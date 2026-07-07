@@ -4,12 +4,16 @@ import { Match } from "@/lib/types";
 import { groupByDay } from "@/lib/utils";
 import ListCard from "./ListCard";
 
-export default function ResultsList({ matches }: { matches: Match[] }) {
-  const done = matches
-    .filter((m) => m.status === "final" && m.round !== "GS")
+export default function GroupStage({ matches }: { matches: Match[] }) {
+  const gs = matches
+    .filter((m) => m.round === "GS")
     .sort((a, b) => new Date(b.ko).getTime() - new Date(a.ko).getTime());
 
-  const groups = groupByDay(done);
+  if (gs.length === 0) {
+    return <p style={{ textAlign: "center", padding: "2rem", opacity: 0.6 }}>グループステージのデータはまだありません</p>;
+  }
+
+  const groups = groupByDay(gs);
 
   return (
     <div>

@@ -1,6 +1,7 @@
 import { RoundType } from "./types";
 
 export const ROUND_JA: Record<RoundType, string> = {
+  GS: "グループステージ",
   R32: "ラウンド32",
   R16: "ラウンド16",
   QF: "準々決勝",

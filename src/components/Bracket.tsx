@@ -18,17 +18,20 @@ function bySlot(matches: Match[], round: string): Match[] {
 }
 
 export default function Bracket({ matches }: { matches: Match[] }) {
-  const r16 = bySlot(matches, "R16");
-  const qf = bySlot(matches, "QF");
-  const sf = bySlot(matches, "SF");
-  const f = bySlot(matches, "F");
-  const third = matches.find((m) => m.id === "third");
+  const knockout = matches.filter((m) => m.round !== "GS");
+  const r32 = bySlot(knockout, "R32");
+  const r16 = bySlot(knockout, "R16");
+  const qf = bySlot(knockout, "QF");
+  const sf = bySlot(knockout, "SF");
+  const f = bySlot(knockout, "F");
+  const third = knockout.find((m) => m.round === "3P");
 
   const rounds = [
+    ...(r32.length > 0 ? [{ title: "ラウンド32", data: r32, finalH: false }] : []),
     { title: "ラウンド16", data: r16, finalH: false },
     { title: "準々決勝", data: qf, finalH: false },
     { title: "準決勝", data: sf, finalH: false },
-    { title: "決勝 — 7/20(月) 4:00", data: f, finalH: true },
+    { title: "決勝", data: f, finalH: true },
   ];
 
   return (

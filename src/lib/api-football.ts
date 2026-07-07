@@ -43,8 +43,9 @@ const STATUS_MAP: Record<string, MatchStatus> = {
 
 // ---------- ラウンド変換 ----------
 
-function parseRound(round: string): { round: RoundType | null; slot?: number } {
+function parseRound(round: string): { round: RoundType; slot?: number } {
   const r = round.toLowerCase();
+  if (r.includes("group")) return { round: "GS" };
   if (r.includes("round of 32")) return { round: "R32" };
   if (r.includes("round of 16")) return { round: "R16" };
   if (r.includes("quarter")) return { round: "QF" };
@@ -53,8 +54,7 @@ function parseRound(round: string): { round: RoundType | null; slot?: number } {
   if (r.includes("final") && !r.includes("semi") && !r.includes("quarter")) {
     return { round: "F" };
   }
-  // グループステージ等はノックアウトステージ外なので除外
-  return { round: null };
+  return { round: "GS" };
 }
 
 // ---------- 国名・国旗マッピング ----------
@@ -122,12 +122,8 @@ function toTeam(apiTeam: { id: number; name: string }): Team {
 
 // ---------- 1試合変換 ----------
 
-export function convertFixture(fx: ApiFixture): Match | null {
+export function convertFixture(fx: ApiFixture): Match {
   const { round, slot } = parseRound(fx.league.round);
-
-  // グループステージ等はノックアウトステージ外なので除外
-  if (round === null) return null;
-
   const status = STATUS_MAP[fx.fixture.status.short] ?? "scheduled";
 
   const match: Match = {
@@ -188,10 +184,8 @@ export async function fetchMatches(): Promise<Match[]> {
     throw new Error(`API-Football error: ${msg}`);
   }
 
-  const matches = data.response
-    .map(convertFixture)
-    .filter((m): m is Match => m !== null);
+  const matches = data.response.map(convertFixture);
 
-  console.log(`[api-football] ${data.results} total, ${matches.length} knockout matches`);
+  console.log(`[api-football] ${matches.length} fixtures fetched`);
   return matches;
 }

@@ -4,7 +4,7 @@ export interface Team {
   f: string;   // 国旗絵文字
 }
 
-export type RoundType = "R32" | "R16" | "QF" | "SF" | "3P" | "F";
+export type RoundType = "GS" | "R32" | "R16" | "QF" | "SF" | "3P" | "F";
 export type MatchStatus = "scheduled" | "live" | "final";
 
 export interface Prob {

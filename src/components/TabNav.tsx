@@ -7,6 +7,7 @@ interface TabNavProps {
 
 const TABS = [
   { id: "bracket", label: "トーナメント表" },
+  { id: "group", label: "グループ" },
   { id: "results", label: "試合結果" },
   { id: "schedule", label: "今後の日程" },
 ];

@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Hero from "@/components/Hero";
 import TabNav from "@/components/TabNav";
 import Bracket from "@/components/Bracket";
+import GroupStage from "@/components/GroupStage";
 import ResultsList from "@/components/ResultsList";
 import ScheduleList from "@/components/ScheduleList";
 import Footer from "@/components/Footer";
@@ -31,6 +32,9 @@ export default function Home() {
         <TabNav active={activeTab} onTabChange={setActiveTab} />
         <section className={`panel${activeTab === "bracket" ? " active" : ""}`}>
           <Bracket matches={data.matches} />
+        </section>
+        <section className={`panel${activeTab === "group" ? " active" : ""}`}>
+          <GroupStage matches={data.matches} />
         </section>
         <section className={`panel${activeTab === "results" ? " active" : ""}`}>
           <ResultsList matches={data.matches} />
