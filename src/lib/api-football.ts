@@ -1,4 +1,4 @@
-import { Match, MatchStatus, RoundType, Team } from "./types";
+import { Match, MatchEvent, MatchStatus, RoundType, Team } from "./types";
 
 // ---------- API-Football レスポンス型 ----------
 
@@ -19,10 +19,29 @@ interface ApiFixture {
   };
 }
 
+interface ApiEvent {
+  time: { elapsed: number; extra: number | null };
+  team: { id: number; name: string };
+  player: { id: number; name: string };
+  assist: { id: number | null; name: string | null };
+  type: string;
+  detail: string;
+}
+
+interface ApiFixtureDetail extends ApiFixture {
+  events: ApiEvent[];
+}
+
 interface ApiResponse {
   errors: Record<string, string>;
   results: number;
   response: ApiFixture[];
+}
+
+interface ApiDetailResponse {
+  errors: Record<string, string>;
+  results: number;
+  response: ApiFixtureDetail[];
 }
 
 // ---------- ステータス変換 ----------
@@ -165,6 +184,63 @@ export function convertFixture(fx: ApiFixture): Match {
       fx.score.penalty.home > fx.score.penalty.away ? "home" : "away";
   }
 
+  return match;
+}
+
+// ---------- イベント変換 ----------
+
+export function convertEvents(
+  events: ApiEvent[],
+  homeTeamId: number,
+): MatchEvent[] {
+  return events
+    .filter((e) => e.type === "Goal")
+    .map((e) => ({
+      minute: e.time.elapsed + (e.time.extra ?? 0),
+      type: "goal" as const,
+      player: e.player.name,
+      assist: e.assist.name ?? undefined,
+      detail: e.detail === "Normal Goal" ? undefined : e.detail,
+      side: (e.team.id === homeTeamId ? "home" : "away") as "home" | "away",
+    }));
+}
+
+// ---------- 1試合詳細取得 ----------
+
+export async function fetchFixtureDetail(
+  fixtureId: string,
+): Promise<Match> {
+  const key = process.env.API_FOOTBALL_KEY;
+  if (!key) {
+    throw new Error("API_FOOTBALL_KEY is not set");
+  }
+
+  const res = await fetch(
+    `https://v3.football.api-sports.io/fixtures?id=${fixtureId}`,
+    {
+      headers: { "x-apisports-key": key },
+      next: { revalidate: 30 },
+    },
+  );
+
+  if (!res.ok) {
+    throw new Error(`API-Football responded with ${res.status}`);
+  }
+
+  const data: ApiDetailResponse = await res.json();
+
+  if (data.errors && Object.keys(data.errors).length > 0) {
+    const msg = Object.values(data.errors).join(", ");
+    throw new Error(`API-Football error: ${msg}`);
+  }
+
+  if (data.response.length === 0) {
+    throw new Error(`Fixture ${fixtureId} not found`);
+  }
+
+  const fx = data.response[0];
+  const match = convertFixture(fx);
+  match.events = convertEvents(fx.events ?? [], fx.teams.home.id);
   return match;
 }
 

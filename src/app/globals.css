@@ -287,6 +287,28 @@ nav.tabs::-webkit-scrollbar { display: none }
 }
 
 /* ==========================================================
+   展開式イベント表示
+   ========================================================== */
+.expandable { cursor: pointer }
+.events-panel {
+  border-top: 1px dashed var(--line);
+  margin-top: 8px; padding-top: 8px;
+}
+.events-list { display: flex; flex-direction: column; gap: 4px }
+.event-row {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--chalk); padding: 2px 0;
+}
+.event-icon { font-size: 14px; width: 20px; text-align: center }
+.event-min { font-family: var(--font-d); font-size: 12px; color: var(--gold); min-width: 28px }
+.event-player { flex: 1 }
+.event-team { font-size: 11px; color: var(--chalk-dim); margin-left: 4px }
+.event-detail { font-size: 11px; color: var(--live) }
+.events-empty, .events-loading {
+  font-size: 12px; color: var(--chalk-dim); text-align: center; padding: 4px 0;
+}
+
+/* ==========================================================
    フッター
    ========================================================== */
 footer {

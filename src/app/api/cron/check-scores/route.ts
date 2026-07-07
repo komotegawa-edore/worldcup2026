@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchMatches } from "@/lib/api-football";
-import { broadcastGoalNotification } from "@/lib/line-notify";
+import {
+  broadcastGoalNotification,
+  broadcastMatchStart,
+  broadcastMatchEnd,
+} from "@/lib/line-notify";
 import { DATA } from "@/lib/data";
-import { Match } from "@/lib/types";
+import { Match, MatchStatus } from "@/lib/types";
 import { MATCH_MS } from "@/lib/constants";
 
-/** 前回取得時のスコアを保持するキャッシュ (fixtureId → { hs, as }) */
-const prevScores = new Map<string, { hs: number; as: number }>();
+/** 前回取得時のスコアとステータスを保持するキャッシュ */
+const prevState = new Map<
+  string,
+  { hs: number; as: number; status: MatchStatus }
+>();
 
 /** 現在ライブ中 or まもなく開始の試合があるか (前後30分のマージン付き) */
 function hasLiveWindow(): boolean {
@@ -45,37 +52,94 @@ export async function GET(req: NextRequest) {
       (m) => m.status === "live" || m.status === "final",
     );
 
-    const changes: Match[] = [];
+    const scoreChanges: Match[] = [];
+    const started: Match[] = [];
+    const ended: Match[] = [];
 
     for (const match of activeMatches) {
       const hs = match.hs ?? 0;
       const as = match.as ?? 0;
-      const prev = prevScores.get(match.id);
+      const prev = prevState.get(match.id);
 
-      if (prev && (prev.hs !== hs || prev.as !== as)) {
-        changes.push(match);
+      if (prev) {
+        // スコア変化の検知
+        if (prev.hs !== hs || prev.as !== as) {
+          scoreChanges.push(match);
+        }
+        // ステータス変化の検知
+        if (prev.status === "scheduled" && match.status === "live") {
+          started.push(match);
+        }
+        if (prev.status === "live" && match.status === "final") {
+          ended.push(match);
+        }
+      } else {
+        // 初回登場: live なら試合開始とみなす
+        if (match.status === "live") {
+          started.push(match);
+        }
       }
 
       // キャッシュ更新
-      prevScores.set(match.id, { hs, as });
+      prevState.set(match.id, { hs, as, status: match.status });
     }
 
-    // 変化があった試合ごとに LINE 通知
+    // scheduled の試合もキャッシュに入れておく（開始検知のため）
+    const scheduledMatches = matches.filter((m) => m.status === "scheduled");
+    for (const match of scheduledMatches) {
+      if (!prevState.has(match.id)) {
+        prevState.set(match.id, {
+          hs: 0,
+          as: 0,
+          status: match.status,
+        });
+      }
+    }
+
+    // 通知送信
     const notifications: string[] = [];
-    for (const match of changes) {
+
+    // 試合開始通知
+    for (const match of started) {
+      try {
+        await broadcastMatchStart(match);
+        notifications.push(
+          `🏟️ ${match.home?.n ?? "?"} vs ${match.away?.n ?? "?"}`,
+        );
+      } catch (e) {
+        console.error(`[cron] LINE start notification failed for ${match.id}:`, e);
+      }
+    }
+
+    // ゴール通知
+    for (const match of scoreChanges) {
       try {
         await broadcastGoalNotification(match);
         notifications.push(
-          `${match.home?.n ?? "?"} ${match.hs} - ${match.as} ${match.away?.n ?? "?"}`,
+          `⚽ ${match.home?.n ?? "?"} ${match.hs} - ${match.as} ${match.away?.n ?? "?"}`,
         );
       } catch (e) {
         console.error(`[cron] LINE notification failed for ${match.id}:`, e);
       }
     }
 
+    // 試合終了通知
+    for (const match of ended) {
+      try {
+        await broadcastMatchEnd(match);
+        notifications.push(
+          `🏁 ${match.home?.n ?? "?"} ${match.hs} - ${match.as} ${match.away?.n ?? "?"}`,
+        );
+      } catch (e) {
+        console.error(`[cron] LINE end notification failed for ${match.id}:`, e);
+      }
+    }
+
     return NextResponse.json({
       checked: activeMatches.length,
-      changes: changes.length,
+      scoreChanges: scoreChanges.length,
+      started: started.length,
+      ended: ended.length,
       notifications,
     });
   } catch (e) {

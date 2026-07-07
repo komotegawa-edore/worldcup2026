@@ -13,6 +13,15 @@ export interface Prob {
   a: number; // アウェイ勝率 (%)
 }
 
+export interface MatchEvent {
+  minute: number;
+  type: "goal" | "card" | "subst";
+  player: string;
+  assist?: string;
+  detail?: string;
+  side: "home" | "away";
+}
+
 export interface Match {
   id: string;
   round: RoundType;
@@ -29,6 +38,7 @@ export interface Match {
   note?: string;
   upset?: boolean;
   prob?: Prob;
+  events?: MatchEvent[];
 }
 
 export interface MatchData {
