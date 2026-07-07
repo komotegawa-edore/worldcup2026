@@ -8,7 +8,7 @@ interface ApiFixture {
     date: string;
     status: { short: string; elapsed: number | null };
   };
-  league: { round: string };
+  league: { id: number; round: string };
   teams: {
     home: { id: number; name: string };
     away: { id: number; name: string };
@@ -158,14 +158,23 @@ export function convertFixture(fx: ApiFixture): Match {
 
 // ---------- 全試合取得 ----------
 
+const WORLD_CUP_LEAGUE_ID = 1;
+
+/**
+ * 今日のW杯試合を API-Football から取得する。
+ * 無料プランでは league=1&season=2026 が使えないため、
+ * date パラメータで当日の全試合を取得し league.id === 1 でフィルタする。
+ */
 export async function fetchMatches(): Promise<Match[]> {
   const key = process.env.API_FOOTBALL_KEY;
   if (!key) {
     throw new Error("API_FOOTBALL_KEY is not set");
   }
 
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
   const res = await fetch(
-    "https://v3.football.api-sports.io/fixtures?league=1&season=2026",
+    `https://v3.football.api-sports.io/fixtures?date=${today}`,
     {
       headers: { "x-apisports-key": key },
       next: { revalidate: 30 },
@@ -184,6 +193,13 @@ export async function fetchMatches(): Promise<Match[]> {
     throw new Error(`API-Football error: ${msg}`);
   }
 
-  console.log(`[api-football] ${data.results} fixtures fetched`);
-  return data.response.map(convertFixture);
+  // W杯の試合のみフィルタ
+  const wcFixtures = data.response.filter(
+    (f) => f.league.id === WORLD_CUP_LEAGUE_ID,
+  );
+
+  console.log(
+    `[api-football] ${data.results} total fixtures, ${wcFixtures.length} World Cup`,
+  );
+  return wcFixtures.map(convertFixture);
 }
