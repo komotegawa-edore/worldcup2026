@@ -3,9 +3,10 @@
 import { use } from "react";
 import useSWR from "swr";
 import Link from "next/link";
-import { Match, MatchEvent, MatchPreview, SquadPlayer } from "@/lib/types";
+import { Match, MatchEvent, MatchPreview, SquadPlayer, StatItem } from "@/lib/types";
 import { ROUND_JA } from "@/lib/constants";
 import { fmtDT } from "@/lib/utils";
+import Flag from "@/components/Flag";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -24,7 +25,7 @@ function Scoreboard({ match }: { match: Match }) {
     <div className="scoreboard">
       <div className="sb-teams">
         <div className="sb-team">
-          <span className="sb-flag">{match.home?.f ?? "·"}</span>
+          <span className="sb-flag"><Flag code={match.home?.f ?? ""} size={36} /></span>
           <span className="sb-name">{match.home?.n ?? "未定"}</span>
         </div>
         <div className="sb-score num">
@@ -39,7 +40,7 @@ function Scoreboard({ match }: { match: Match }) {
           )}
         </div>
         <div className="sb-team">
-          <span className="sb-flag">{match.away?.f ?? "·"}</span>
+          <span className="sb-flag"><Flag code={match.away?.f ?? ""} size={36} /></span>
           <span className="sb-name">{match.away?.n ?? "未定"}</span>
         </div>
       </div>
@@ -70,8 +71,8 @@ function Timeline({ events }: { events: MatchEvent[] }) {
   return (
     <div className="timeline">
       {sorted.map((ev, i) => {
-        const icon = ev.type === "red" ? "🟥" : "⚽";
         const isHome = ev.side === "home";
+        const icon = <span className={ev.type === "red" ? "tl-icon tl-icon-red" : "tl-icon tl-icon-goal"} />;
         return (
           <div key={i} className="tl-row">
             <div className="tl-home">
@@ -146,6 +147,44 @@ function MatchPreviewSection({ match }: { match: Match }) {
   );
 }
 
+function StatsPanel({ matchId }: { matchId: string }) {
+  const { data, isLoading } = useSWR<StatItem[]>(
+    `/api/matches/${matchId}/stats`,
+    fetcher,
+    { revalidateOnFocus: false, dedupingInterval: 60_000 },
+  );
+
+  if (isLoading) return <div className="events-loading">スタッツを読み込み中...</div>;
+  if (!data || data.length === 0) return null;
+
+  return (
+    <div className="stats-section">
+      <h3 className="stats-heading">Match Stats</h3>
+      <div className="stats-list">
+        {data.map((s) => {
+          const hVal = parseFloat(s.home) || 0;
+          const aVal = parseFloat(s.away) || 0;
+          const total = hVal + aVal || 1;
+          const hPct = (hVal / total) * 100;
+          return (
+            <div key={s.label} className="stat-row">
+              <span className="stat-val num">{s.home}</span>
+              <div className="stat-center">
+                <div className="stat-bar">
+                  <div className="stat-bar-h" style={{ width: `${hPct}%` }} />
+                  <div className="stat-bar-a" style={{ width: `${100 - hPct}%` }} />
+                </div>
+                <span className="stat-label">{s.label}</span>
+              </div>
+              <span className="stat-val num">{s.away}</span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function MatchDetailPage({
   params,
 }: {
@@ -165,6 +204,8 @@ export default function MatchDetailPage({
     );
   }
 
+  const showStats = data.status === "final" || data.status === "live";
+
   return (
     <div className="detail-page">
       <Link href="/" className="back-link">← トップへ</Link>
@@ -179,6 +220,7 @@ export default function MatchDetailPage({
       ) : (
         data.events && <Timeline events={data.events} />
       )}
+      {showStats && <StatsPanel matchId={id} />}
     </div>
   );
 }

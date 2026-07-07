@@ -83,7 +83,7 @@ header {
   display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
 }
 .next-team { display: flex; align-items: center; gap: 8px }
-.next-team .flag { font-size: 32px; line-height: 1 }
+.next-team .flag { line-height: 1; display: flex; align-items: center }
 .next-team .name {
   font-family: var(--font-d); font-weight: 600;
   font-size: 22px;
@@ -211,7 +211,7 @@ nav.tabs::-webkit-scrollbar { display: none }
 
 .trow { display: flex; align-items: center; gap: 8px; padding: 7px 10px }
 .trow + .trow { border-top: 1px solid rgba(237,243,236,.07) }
-.trow .flag { font-size: 18px; width: 24px; text-align: center }
+.trow .flag { width: 24px; text-align: center; display: flex; align-items: center; justify-content: center }
 .trow .tn { flex: 1; font-size: 13.5px; font-weight: 500; letter-spacing: .02em }
 .trow .sc {
   font-family: var(--font-d); font-size: 17px; font-weight: 600;
@@ -261,7 +261,7 @@ nav.tabs::-webkit-scrollbar { display: none }
 }
 .rcard .top .rname { color: var(--gold) }
 .rline { display: flex; align-items: center; gap: 10px; padding: 4px 0 }
-.rline .flag { font-size: 20px; width: 26px; text-align: center }
+.rline .flag { width: 26px; text-align: center; display: flex; align-items: center; justify-content: center }
 .rline .tn { flex: 1; font-size: 15px }
 .rline .sc { font-family: var(--font-d); font-size: 20px; font-weight: 600 }
 .rline.win .sc, .rline.win .tn { color: var(--chalk) }
@@ -351,7 +351,7 @@ footer {
     gap: 32px;
   }
   .hero .eyebrow { letter-spacing: .3em; font-size: 12px }
-  .next-team .flag { font-size: 52px }
+  .next-team .flag img { width: 52px; height: auto }
   .next-team .name { font-size: 40px }
   .next-vs { font-size: 24px }
   .countdown { text-align: right }
@@ -382,7 +382,7 @@ footer {
 
   .detail-page { padding: 32px var(--pad) }
   .scoreboard { max-width: 600px; margin: 0 auto }
-  .sb-flag { font-size: 48px }
+  .sb-flag img { width: 48px; height: auto }
   .sb-name { font-size: 28px }
   .sb-score { font-size: 56px }
   .timeline { max-width: 700px; margin: 0 auto }
@@ -427,7 +427,7 @@ footer {
   gap: 4px;
   min-width: 80px;
 }
-.sb-flag { font-size: 36px; line-height: 1 }
+.sb-flag { line-height: 1; display: flex; align-items: center; justify-content: center }
 .sb-name {
   font-family: var(--font-d);
   font-size: 18px;
@@ -678,4 +678,116 @@ footer {
 .preview-num {
   font-size: 12px;
   color: var(--chalk-dim);
+}
+
+/* ==========================================================
+   国旗画像 (flagcdn.com)
+   ========================================================== */
+.flag-img {
+  display: inline-block;
+  vertical-align: middle;
+  border-radius: 2px;
+  object-fit: cover;
+}
+.flag-slot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.flag-placeholder {
+  display: inline-block;
+  background: var(--pitch-3);
+  border-radius: 2px;
+}
+
+/* テーブル内の国旗 */
+.standings-table .flag-img,
+.ranking-table .flag-img {
+  vertical-align: -2px;
+  margin-right: 4px;
+}
+
+/* ==========================================================
+   タイムラインアイコン (絵文字置き換え)
+   ========================================================== */
+.tl-icon {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  vertical-align: middle;
+  margin: 0 2px;
+}
+.tl-icon-goal {
+  background: var(--chalk);
+  border: 2px solid var(--grass);
+}
+.tl-icon-red {
+  background: var(--live);
+  border-radius: 2px;
+  border: none;
+}
+
+/* ==========================================================
+   試合スタッツ
+   ========================================================== */
+.stats-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px dashed var(--line);
+}
+.stats-heading {
+  font-family: var(--font-d);
+  font-size: 13px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 16px;
+  text-align: center;
+}
+.stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+.stat-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.stat-val {
+  font-family: var(--font-d);
+  font-size: 14px;
+  font-weight: 600;
+  min-width: 36px;
+  text-align: center;
+}
+.stat-center {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+.stat-label {
+  font-size: 10px;
+  color: var(--chalk-dim);
+  letter-spacing: .05em;
+}
+.stat-bar {
+  width: 100%;
+  display: flex;
+  height: 6px;
+  border-radius: 3px;
+  overflow: hidden;
+}
+.stat-bar-h {
+  background: var(--grass);
+  transition: width .3s;
+}
+.stat-bar-a {
+  background: var(--pitch-3);
+  transition: width .3s;
 }

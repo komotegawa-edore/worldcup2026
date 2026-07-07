@@ -1,4 +1,4 @@
-import { GroupStanding, Match, MatchEvent, MatchPreview, MatchStatus, PlayerRank, RoundType, SquadPlayer, Team } from "./types";
+import { GroupStanding, Match, MatchEvent, MatchPreview, MatchStatus, PlayerRank, RoundType, SquadPlayer, StatItem, Team } from "./types";
 
 // ---------- API-Football レスポンス型 ----------
 
@@ -88,62 +88,62 @@ interface CountryInfo {
   flag: string;
 }
 
-/** API-Football の team.id → 国情報 (実際のAPIレスポンスから取得したID) */
+/** API-Football の team.id → 国情報 (flag は flagcdn.com 用 ISO 3166-1 alpha-2) */
 const TEAM_MAP: Record<number, CountryInfo> = {
   // ヨーロッパ
-  1: { code: "BEL", name: "ベルギー", flag: "🇧🇪" },
-  2: { code: "FRA", name: "フランス", flag: "🇫🇷" },
-  3: { code: "CRO", name: "クロアチア", flag: "🇭🇷" },
-  5: { code: "SWE", name: "スウェーデン", flag: "🇸🇪" },
-  9: { code: "ESP", name: "スペイン", flag: "🇪🇸" },
-  10: { code: "ENG", name: "イングランド", flag: "🏴󠁧󠁢󠁥󠁮󠁧󠁿" },
-  15: { code: "SUI", name: "スイス", flag: "🇨🇭" },
-  25: { code: "GER", name: "ドイツ", flag: "🇩🇪" },
-  27: { code: "POR", name: "ポルトガル", flag: "🇵🇹" },
-  770: { code: "CZE", name: "チェコ", flag: "🇨🇿" },
-  775: { code: "AUT", name: "オーストリア", flag: "🇦🇹" },
-  777: { code: "TUR", name: "トルコ", flag: "🇹🇷" },
-  1090: { code: "NOR", name: "ノルウェー", flag: "🇳🇴" },
-  1108: { code: "SCO", name: "スコットランド", flag: "🏴󠁧󠁢󠁳󠁣󠁴󠁿" },
-  1113: { code: "BIH", name: "ボスニア・ヘルツェゴビナ", flag: "🇧🇦" },
-  1118: { code: "NED", name: "オランダ", flag: "🇳🇱" },
+  1: { code: "BEL", name: "ベルギー", flag: "be" },
+  2: { code: "FRA", name: "フランス", flag: "fr" },
+  3: { code: "CRO", name: "クロアチア", flag: "hr" },
+  5: { code: "SWE", name: "スウェーデン", flag: "se" },
+  9: { code: "ESP", name: "スペイン", flag: "es" },
+  10: { code: "ENG", name: "イングランド", flag: "gb-eng" },
+  15: { code: "SUI", name: "スイス", flag: "ch" },
+  25: { code: "GER", name: "ドイツ", flag: "de" },
+  27: { code: "POR", name: "ポルトガル", flag: "pt" },
+  770: { code: "CZE", name: "チェコ", flag: "cz" },
+  775: { code: "AUT", name: "オーストリア", flag: "at" },
+  777: { code: "TUR", name: "トルコ", flag: "tr" },
+  1090: { code: "NOR", name: "ノルウェー", flag: "no" },
+  1108: { code: "SCO", name: "スコットランド", flag: "gb-sct" },
+  1113: { code: "BIH", name: "ボスニア・ヘルツェゴビナ", flag: "ba" },
+  1118: { code: "NED", name: "オランダ", flag: "nl" },
   // 南米
-  6: { code: "BRA", name: "ブラジル", flag: "🇧🇷" },
-  7: { code: "URU", name: "ウルグアイ", flag: "🇺🇾" },
-  8: { code: "COL", name: "コロンビア", flag: "🇨🇴" },
-  26: { code: "ARG", name: "アルゼンチン", flag: "🇦🇷" },
-  2380: { code: "PAR", name: "パラグアイ", flag: "🇵🇾" },
-  2382: { code: "ECU", name: "エクアドル", flag: "🇪🇨" },
+  6: { code: "BRA", name: "ブラジル", flag: "br" },
+  7: { code: "URU", name: "ウルグアイ", flag: "uy" },
+  8: { code: "COL", name: "コロンビア", flag: "co" },
+  26: { code: "ARG", name: "アルゼンチン", flag: "ar" },
+  2380: { code: "PAR", name: "パラグアイ", flag: "py" },
+  2382: { code: "ECU", name: "エクアドル", flag: "ec" },
   // 北中米・カリブ
-  11: { code: "PAN", name: "パナマ", flag: "🇵🇦" },
-  16: { code: "MEX", name: "メキシコ", flag: "🇲🇽" },
-  2384: { code: "USA", name: "アメリカ", flag: "🇺🇸" },
-  2386: { code: "HAI", name: "ハイチ", flag: "🇭🇹" },
-  5529: { code: "CAN", name: "カナダ", flag: "🇨🇦" },
-  5530: { code: "CUW", name: "キュラソー", flag: "🇨🇼" },
+  11: { code: "PAN", name: "パナマ", flag: "pa" },
+  16: { code: "MEX", name: "メキシコ", flag: "mx" },
+  2384: { code: "USA", name: "アメリカ", flag: "us" },
+  2386: { code: "HAI", name: "ハイチ", flag: "ht" },
+  5529: { code: "CAN", name: "カナダ", flag: "ca" },
+  5530: { code: "CUW", name: "キュラソー", flag: "cw" },
   // アジア
-  12: { code: "JPN", name: "日本", flag: "🇯🇵" },
-  17: { code: "KOR", name: "韓国", flag: "🇰🇷" },
-  20: { code: "AUS", name: "オーストラリア", flag: "🇦🇺" },
-  22: { code: "IRN", name: "イラン", flag: "🇮🇷" },
-  23: { code: "SAU", name: "サウジアラビア", flag: "🇸🇦" },
-  1548: { code: "JOR", name: "ヨルダン", flag: "🇯🇴" },
-  1567: { code: "IRQ", name: "イラク", flag: "🇮🇶" },
-  1568: { code: "UZB", name: "ウズベキスタン", flag: "🇺🇿" },
-  1569: { code: "QAT", name: "カタール", flag: "🇶🇦" },
+  12: { code: "JPN", name: "日本", flag: "jp" },
+  17: { code: "KOR", name: "韓国", flag: "kr" },
+  20: { code: "AUS", name: "オーストラリア", flag: "au" },
+  22: { code: "IRN", name: "イラン", flag: "ir" },
+  23: { code: "SAU", name: "サウジアラビア", flag: "sa" },
+  1548: { code: "JOR", name: "ヨルダン", flag: "jo" },
+  1567: { code: "IRQ", name: "イラク", flag: "iq" },
+  1568: { code: "UZB", name: "ウズベキスタン", flag: "uz" },
+  1569: { code: "QAT", name: "カタール", flag: "qa" },
   // アフリカ
-  13: { code: "SEN", name: "セネガル", flag: "🇸🇳" },
-  28: { code: "TUN", name: "チュニジア", flag: "🇹🇳" },
-  31: { code: "MAR", name: "モロッコ", flag: "🇲🇦" },
-  32: { code: "EGY", name: "エジプト", flag: "🇪🇬" },
-  1501: { code: "CIV", name: "コートジボワール", flag: "🇨🇮" },
-  1504: { code: "GHA", name: "ガーナ", flag: "🇬🇭" },
-  1508: { code: "COD", name: "コンゴ民主共和国", flag: "🇨🇩" },
-  1531: { code: "RSA", name: "南アフリカ", flag: "🇿🇦" },
-  1532: { code: "DZA", name: "アルジェリア", flag: "🇩🇿" },
-  1533: { code: "CPV", name: "カーボベルデ", flag: "🇨🇻" },
+  13: { code: "SEN", name: "セネガル", flag: "sn" },
+  28: { code: "TUN", name: "チュニジア", flag: "tn" },
+  31: { code: "MAR", name: "モロッコ", flag: "ma" },
+  32: { code: "EGY", name: "エジプト", flag: "eg" },
+  1501: { code: "CIV", name: "コートジボワール", flag: "ci" },
+  1504: { code: "GHA", name: "ガーナ", flag: "gh" },
+  1508: { code: "COD", name: "コンゴ民主共和国", flag: "cd" },
+  1531: { code: "RSA", name: "南アフリカ", flag: "za" },
+  1532: { code: "DZA", name: "アルジェリア", flag: "dz" },
+  1533: { code: "CPV", name: "カーボベルデ", flag: "cv" },
   // オセアニア
-  4673: { code: "NZL", name: "ニュージーランド", flag: "🇳🇿" },
+  4673: { code: "NZL", name: "ニュージーランド", flag: "nz" },
 };
 
 function toTeam(apiTeam: { id: number; name: string }): Team {
@@ -152,7 +152,7 @@ function toTeam(apiTeam: { id: number; name: string }): Team {
     return { c: info.code, n: info.name, f: info.flag };
   }
   // 未登録チームはAPI名をそのまま使用
-  return { c: apiTeam.name.slice(0, 3).toUpperCase(), n: apiTeam.name, f: "🏳️" };
+  return { c: apiTeam.name.slice(0, 3).toUpperCase(), n: apiTeam.name, f: "" };
 }
 
 // ---------- 1試合変換 ----------
@@ -358,7 +358,7 @@ export async function fetchTopScorers(): Promise<PlayerRank[]> {
       rank: i + 1,
       name: p.player?.name ?? "Unknown",
       team: info?.name ?? p.statistics?.[0]?.team?.name ?? "Unknown",
-      flag: info?.flag ?? "🏳️",
+      flag: info?.flag ?? "",
       count: p.statistics?.[0]?.goals?.total ?? 0,
     };
   });
@@ -376,7 +376,7 @@ export async function fetchTopAssists(): Promise<PlayerRank[]> {
       rank: i + 1,
       name: p.player?.name ?? "Unknown",
       team: info?.name ?? p.statistics?.[0]?.team?.name ?? "Unknown",
-      flag: info?.flag ?? "🏳️",
+      flag: info?.flag ?? "",
       count: p.statistics?.[0]?.goals?.assists ?? 0,
     };
   });
@@ -404,7 +404,7 @@ export async function fetchStandings(): Promise<Record<string, GroupStanding[]>>
       const info = TEAM_MAP[entry.team?.id];
       const team: Team = info
         ? { c: info.code, n: info.name, f: info.flag }
-        : { c: (entry.team?.name ?? "").slice(0, 3).toUpperCase(), n: entry.team?.name ?? "", f: "🏳️" };
+        : { c: (entry.team?.name ?? "").slice(0, 3).toUpperCase(), n: entry.team?.name ?? "", f: "" };
       return {
         rank: entry.rank ?? 0,
         team,
@@ -474,4 +474,51 @@ export async function fetchMatchPreview(
     home: homeSquad.sort(sortByPos).slice(0, 5),
     away: awaySquad.sort(sortByPos).slice(0, 5),
   };
+}
+
+// ---------- 試合スタッツ取得 ----------
+
+const STAT_LABELS: Record<string, string> = {
+  "Ball Possession": "ポゼッション",
+  "Total Shots": "シュート",
+  "Shots on Goal": "枠内シュート",
+  "Shots off Goal": "枠外シュート",
+  "Corner Kicks": "コーナーキック",
+  "Fouls": "ファウル",
+  "Offsides": "オフサイド",
+  "Yellow Cards": "イエローカード",
+  "Red Cards": "レッドカード",
+  "Passes %": "パス成功率",
+  "Total passes": "パス数",
+};
+
+const STAT_ORDER = Object.keys(STAT_LABELS);
+
+export async function fetchFixtureStats(fixtureId: string): Promise<StatItem[]> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any = await apiFetch(`/fixtures/statistics?fixture=${fixtureId}`);
+  const teams = data.response ?? [];
+  if (teams.length < 2) return [];
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const homeStats: Record<string, string> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const awayStats: Record<string, string> = {};
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const s of (teams[0].statistics ?? []) as any[]) {
+    homeStats[s.type] = String(s.value ?? "0");
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  for (const s of (teams[1].statistics ?? []) as any[]) {
+    awayStats[s.type] = String(s.value ?? "0");
+  }
+
+  return STAT_ORDER
+    .filter((key) => homeStats[key] !== undefined)
+    .map((key) => ({
+      label: STAT_LABELS[key] ?? key,
+      home: homeStats[key] ?? "0",
+      away: awayStats[key] ?? "0",
+    }));
 }

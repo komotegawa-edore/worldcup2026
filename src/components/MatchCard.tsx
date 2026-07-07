@@ -4,6 +4,7 @@ import Link from "next/link";
 import { Match } from "@/lib/types";
 import { ROUND_JA } from "@/lib/constants";
 import { fmtDT, isLive, winnerSide } from "@/lib/utils";
+import Flag from "./Flag";
 
 function TeamRow({ match, side }: { match: Match; side: "home" | "away" }) {
   const t = match[side];
@@ -13,7 +14,7 @@ function TeamRow({ match, side }: { match: Match; side: "home" | "away" }) {
     const from = side === "home" ? match.homeFrom : match.awayFrom;
     return (
       <div className="trow tbd">
-        <span className="flag">·</span>
+        <span className="flag flag-slot"></span>
         <span className="tn">{from || "未定"}</span>
         <span className="sc">–</span>
       </div>
@@ -30,7 +31,7 @@ function TeamRow({ match, side }: { match: Match; side: "home" | "away" }) {
 
   return (
     <div className={`trow ${cls}`}>
-      <span className="flag">{t.f}</span>
+      <span className="flag flag-slot"><Flag code={t.f} size={18} /></span>
       <span className="tn">
         {t.n}
         {w === side && <span className="adv">進出</span>}

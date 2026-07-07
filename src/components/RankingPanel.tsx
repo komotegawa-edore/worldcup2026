@@ -3,6 +3,7 @@
 import { useState } from "react";
 import useSWR from "swr";
 import { PlayerRank } from "@/lib/types";
+import Flag from "./Flag";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -29,7 +30,7 @@ function RankTable({ rows, label }: { rows: PlayerRank[]; label: string }) {
         {rows.map((r) => (
           <tr key={r.rank} className="rank-row">
             <td className="num">{r.rank}</td>
-            <td>{r.flag} {r.name}</td>
+            <td><Flag code={r.flag} size={16} /> {r.name}</td>
             <td>{r.team}</td>
             <td className="num">{r.count}</td>
           </tr>

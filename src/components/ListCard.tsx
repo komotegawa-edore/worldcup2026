@@ -5,6 +5,7 @@ import { Match } from "@/lib/types";
 import { ROUND_JA } from "@/lib/constants";
 import { fmtDT, isLive, winnerSide } from "@/lib/utils";
 import ProbBar from "./ProbBar";
+import Flag from "./Flag";
 
 function ResultLine({
   match,
@@ -20,7 +21,7 @@ function ResultLine({
     const from = side === "home" ? match.homeFrom : match.awayFrom;
     return (
       <div className="rline">
-        <span className="flag">·</span>
+        <span className="flag flag-slot"></span>
         <span className="tn" style={{ color: "var(--chalk-dim)" }}>
           {from}
         </span>
@@ -38,7 +39,7 @@ function ResultLine({
 
   return (
     <div className={`rline ${cls}`}>
-      <span className="flag">{t.f}</span>
+      <span className="flag flag-slot"><Flag code={t.f} size={20} /></span>
       <span className="tn">{t.n}</span>
       <span className="sc num">{sc}</span>
     </div>

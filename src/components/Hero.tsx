@@ -5,6 +5,7 @@ import { Match } from "@/lib/types";
 import { ROUND_JA } from "@/lib/constants";
 import { fmtDT, isLive } from "@/lib/utils";
 import ProbBar from "./ProbBar";
+import Flag from "./Flag";
 
 export default function Hero({ matches }: { matches: Match[] }) {
   const live = matches.find(isLive);
@@ -70,14 +71,14 @@ export default function Hero({ matches }: { matches: Match[] }) {
         </div>
         <div className="next-match">
           <div className="next-team">
-            <span className="flag">{m.home!.f}</span>
+            <span className="flag flag-slot"><Flag code={m.home!.f} size={32} /></span>
             <span className="name">{m.home!.n}</span>
           </div>
           <span className="next-vs">
             {live ? `${m.hs} – ${m.as}` : "VS"}
           </span>
           <div className="next-team">
-            <span className="flag">{m.away!.f}</span>
+            <span className="flag flag-slot"><Flag code={m.away!.f} size={32} /></span>
             <span className="name">{m.away!.n}</span>
           </div>
         </div>

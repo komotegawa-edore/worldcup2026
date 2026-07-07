@@ -3,6 +3,7 @@
 import useSWR from "swr";
 import { Match, GroupStanding } from "@/lib/types";
 import ListCard from "./ListCard";
+import Flag from "./Flag";
 
 const fetcher = (url: string) => fetch(url).then((r) => r.json());
 
@@ -33,7 +34,7 @@ function StandingsTable({ rows }: { rows: GroupStanding[] }) {
         {rows.map((r) => (
           <tr key={r.team.c}>
             <td className="num">{r.rank}</td>
-            <td>{r.team.f} {r.team.n}</td>
+            <td><Flag code={r.team.f} size={16} /> {r.team.n}</td>
             <td className="num">{r.won}</td>
             <td className="num">{r.drawn}</td>
             <td className="num">{r.lost}</td>

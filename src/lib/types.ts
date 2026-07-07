@@ -1,7 +1,7 @@
 export interface Team {
   c: string;   // 国コード (e.g. "JPN")
   n: string;   // 国名 (e.g. "日本")
-  f: string;   // 国旗絵文字
+  f: string;   // 国旗コード (flagcdn.com 用 ISO alpha-2, e.g. "jp")
 }
 
 export type RoundType = "GS" | "R32" | "R16" | "QF" | "SF" | "3P" | "F";
@@ -79,4 +79,10 @@ export interface SquadPlayer {
 export interface MatchPreview {
   home: SquadPlayer[];
   away: SquadPlayer[];
+}
+
+export interface StatItem {
+  label: string;
+  home: string;
+  away: string;
 }
