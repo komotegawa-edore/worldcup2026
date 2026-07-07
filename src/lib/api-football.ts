@@ -157,18 +157,28 @@ function toTeam(apiTeam: { id: number; name: string }): Team {
 
 // ---------- 1試合変換 ----------
 
+function isTBD(team: { id: number; name: string }): boolean {
+  return !team.name || team.name === "TBD" || team.id === 0;
+}
+
 export function convertFixture(fx: ApiFixture): Match {
   const { round, slot, group } = parseRound(fx.league.round);
   const status = STATUS_MAP[fx.fixture.status.short] ?? "scheduled";
+
+  const homeTBD = isTBD(fx.teams.home);
+  const awayTBD = isTBD(fx.teams.away);
 
   const match: Match = {
     id: String(fx.fixture.id),
     round,
     ko: fx.fixture.date,
     status,
-    home: toTeam(fx.teams.home),
-    away: toTeam(fx.teams.away),
+    home: homeTBD ? null : toTeam(fx.teams.home),
+    away: awayTBD ? null : toTeam(fx.teams.away),
   };
+
+  if (homeTBD) match.homeFrom = fx.teams.home.name || "未定";
+  if (awayTBD) match.awayFrom = fx.teams.away.name || "未定";
 
   if (slot !== undefined) match.slot = slot;
   if (group) match.group = group;
@@ -279,7 +289,38 @@ export async function fetchMatches(): Promise<Match[]> {
 
   const matches = data.response.map(convertFixture);
 
-  console.log(`[api-football] ${matches.length} fixtures fetched`);
+  // 不足ラウンドを補完 (API が TBD 試合を返さない場合のフォールバック)
+  const roundCounts: Record<RoundType, number> = { GS: 0, R32: 0, R16: 0, QF: 0, SF: 0, "3P": 0, F: 0 };
+  for (const m of matches) roundCounts[m.round]++;
+
+  const placeholder = (round: RoundType, slot: number, label: string, ko: string): Match => ({
+    id: `placeholder-${round}-${slot}`,
+    round,
+    slot,
+    ko,
+    status: "scheduled",
+    home: null,
+    away: null,
+    homeFrom: label,
+    awayFrom: label,
+  });
+
+  // 準決勝 (2試合必要)
+  if (roundCounts.SF < 2) {
+    for (let i = roundCounts.SF; i < 2; i++) {
+      matches.push(placeholder("SF", i + 1, "準々決勝勝者", "2026-07-19T00:00:00Z"));
+    }
+  }
+  // 3位決定戦 (1試合)
+  if (roundCounts["3P"] < 1) {
+    matches.push(placeholder("3P", 1, "準決勝敗者", "2026-07-19T18:00:00Z"));
+  }
+  // 決勝 (1試合)
+  if (roundCounts.F < 1) {
+    matches.push(placeholder("F", 1, "準決勝勝者", "2026-07-19T22:00:00Z"));
+  }
+
+  console.log(`[api-football] ${matches.length} fixtures fetched (incl. placeholders)`);
   return matches;
 }
 
