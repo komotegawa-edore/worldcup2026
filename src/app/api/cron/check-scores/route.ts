@@ -74,9 +74,15 @@ export async function GET(req: NextRequest) {
           ended.push(match);
         }
       } else {
-        // 初回登場: live なら試合開始とみなす
+        // 初回登場 (コールドスタート時含む):
+        // KO から5分以内の live 試合のみ開始通知する。
+        // これにより、コールドスタートで古い live 試合に再通知するのを防ぐ。
         if (match.status === "live") {
-          started.push(match);
+          const koTime = new Date(match.ko).getTime();
+          const elapsed = Date.now() - koTime;
+          if (elapsed < 5 * 60 * 1000) {
+            started.push(match);
+          }
         }
       }
 
