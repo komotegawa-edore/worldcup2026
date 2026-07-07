@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
 
     try {
       const response = await anthropic.messages.create({
-        model: "claude-sonnet-4-20250514",
+        model: "claude-sonnet-5",
         max_tokens: 300,
         system: `${SYSTEM_PROMPT}\n\n【現在の大会データ】\n${matchContext}`,
         messages: [{ role: "user", content: userText }],
